@@ -1,0 +1,91 @@
+
+include <LiquidCrystal.h>
+const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+
+const int trigPin1 = 7;
+const int echoPin1 = 6;
+const int trigPin2 = 10;
+const int echoPin2 = 9;
+
+int dist1 = 100, dist2 = 100;
+int entry = 0, exita = 0;
+boolean dec = false;
+void setup() {
+  lcd.begin(20, 4);
+  Serial.begin(9600);
+  pinMode(trigPin1,OUTPUT);
+  pinMode(trigPin2,OUTPUT);
+  pinMode(echoPin1,INPUT);
+  pinMode(echoPin2,INPUT);
+  lcd.print("Person Counter");
+}
+void loop() {
+  dist1 = getDistance(trigPin1, echoPin1);
+  dist2 = getDistance(trigPin2,echoPin2);
+  Serial.print("First : ");
+  Serial.print(dist1);
+  Serial.print("      Second : ");
+  Serial.println(dist2);
+  if (dist1 < 10) {
+    dec = true;
+    do {
+      dist2 = getDistance(trigPin2, echoPin2);
+    } while (dist2 > 10);
+    entry++;
+    while (dist2 < 15) {
+      dist2 = getDistance(trigPin2, echoPin2);
+      delay(1);
+    }
+  }
+  dist2 = getDistance(trigPin2, echoPin2);
+  if (dist2 < 10 && !dec) {
+    dec = true;
+    do {
+      dist1 = getDistance(trigPin1, echoPin1);
+    } while (dist1 > 10);
+
+    while (dist1 < 15) {
+      dist1 = getDistance(trigPin1, echoPin1);
+      delay(1);
+    }
+    exita++;
+  }
+  Serial.print("First : ");
+  Serial.print(dist1);
+  Serial.print("      Second : ");
+  Serial.println(dist2);
+  String ent = "Entries : ";
+  ent.concat(entry);
+  String ext = "Exits : ";
+  ext.concat(exita);
+  String total = "Total Person : ";
+  total.concat((entry - exita));
+  lcd.setCursor(0, 1);
+  lcd.print(ent);
+  lcd.setCursor(0, 2);
+  lcd.print(ext);
+  lcd.setCursor(0,3);
+  lcd.print(total);
+  if(dec){
+  dec = false;
+  delay(1500);
+  }
+}
+
+int getDistance(int trigPin, int echoPin) {
+  long duration;
+  int distance;
+  // Clears the trigPin
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  // Sets the trigPin on HIGH state for 10 micro seconds
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  // Reads the echoPin, returns the sound wave travel time in microseconds
+  duration = pulseIn(echoPin, HIGH);
+  // Calculating the distance
+  distance = duration * 0.034 / 2;
+  return distance;
+}
